@@ -482,7 +482,7 @@ def handle_comment_created(data: dict[str, Any]) -> None:
 
     lower_text = text.lower()
     for rule in rules:
-        if rule["keyword"].lower() not in lower_text:
+        if not keyword_matches(rule["keyword"], lower_text):
             continue
         try:
             created_at = utc_now_iso()
@@ -506,6 +506,15 @@ def handle_comment_created(data: dict[str, Any]) -> None:
                 )
         except sqlite3.IntegrityError:
             increment_counter("duplicates_blocked")
+
+
+def keyword_matches(keyword: str, lower_text: str) -> bool:
+    normalized = keyword.strip().lower()
+    if normalized in lower_text:
+        return True
+    if normalized.endswith("e") and f"{normalized[:-1]}ing" in lower_text:
+        return True
+    return False
 
 
 async def send_due_deliveries(limit: int = 1) -> int:

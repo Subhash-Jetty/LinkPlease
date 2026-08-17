@@ -143,6 +143,19 @@ def test_webhook_matches_rule_and_blocks_duplicate_user_rule(tmp_path, monkeypat
     assert stats == {"sent": 0, "failed": 0, "queued": 1, "duplicates_blocked": 1}
 
 
+def test_webhook_matches_ing_variant_for_e_ending_keyword(tmp_path, monkeypatch):
+    app_module = load_app(tmp_path, monkeypatch)
+    client = TestClient(app_module.app)
+    client.post("/rules", json={"keyword": "PRICE", "dm_message": "Here you go"})
+
+    response = post_signed_webhook(client, comment_payload(text="send pricing please"))
+    assert response.status_code == 200
+    app_module.process_webhook_jobs()
+
+    stats = client.get("/stats").json()
+    assert stats["queued"] == 1
+
+
 def test_rejects_bad_signature(tmp_path, monkeypatch):
     app_module = load_app(tmp_path, monkeypatch)
     client = TestClient(app_module.app)
