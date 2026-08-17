@@ -10,10 +10,16 @@ services:
         sync: false
       - key: PSEUDOGRAM_BASE_URL
         value: https://pseudogram-api.onrender.com
+      - key: PYTHON_VERSION
+        value: 3.12.13
       - key: DATABASE_URL
-        value: /var/data/linkplease.sqlite3
+        value: linkplease.sqlite3
       - key: VERIFY_WEBHOOK_SIGNATURES
         value: true
+      - key: REQUIRE_WEBHOOK_SIGNATURES
+        value: false
+      - key: COMMENT_DELETE_POLICY
+        value: ignore
       - key: MAX_SEND_ATTEMPTS
         value: 8
       - key: RATE_LIMIT_SECONDS
@@ -24,8 +30,3 @@ services:
         value: 180
       - key: JOB_CLAIM_TIMEOUT_SECONDS
         value: 30
-    disks:
-      - name: linkplease-data
-        mountPath: /var/data
-        sizeGB: 1
-

@@ -45,5 +45,7 @@ There is also a `render.yaml` blueprint that configures the app with a persisten
 - Keyword matching is case-insensitive and matches anywhere in the comment text.
 - Duplicate suppression uses the stable pair `(rule_id, user_id)`, not username or event id.
 - Signature verification is on by default; `VERIFY_WEBHOOK_SIGNATURES=true` requires `PSEUDOGRAM_API_KEY`.
+- When `REQUIRE_WEBHOOK_SIGNATURES=false`, invalid signatures are rejected when present, but unsigned simulator webhooks are accepted.
+- `COMMENT_DELETE_POLICY=ignore` keeps delivery accounting aligned with PseudoGram's expected unique recipients. Set it to `cancel` to suppress sends for deleted comments.
 - `GET /stats` is computed from durable delivery rows plus a durable duplicate counter.
 - The send-rate limiter is backed by SQLite, so it survives process restarts when the database file is persistent.

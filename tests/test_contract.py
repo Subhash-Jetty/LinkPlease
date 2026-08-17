@@ -11,6 +11,7 @@ def load_app(tmp_path, monkeypatch):
     monkeypatch.setenv("DATABASE_URL", str(tmp_path / "test.sqlite3"))
     monkeypatch.setenv("PSEUDOGRAM_API_KEY", "secret")
     monkeypatch.setenv("VERIFY_WEBHOOK_SIGNATURES", "true")
+    monkeypatch.setenv("COMMENT_DELETE_POLICY", "cancel")
     monkeypatch.setenv("RATE_LIMIT_SECONDS", "0")
     monkeypatch.setenv("SENDING_TIMEOUT_SECONDS", "0")
     monkeypatch.setenv("MAX_STATUS_CHECKS", "3")

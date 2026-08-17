@@ -22,6 +22,8 @@ PSEUDOGRAM_BASE_URL = os.getenv("PSEUDOGRAM_BASE_URL", "https://pseudogram-api.o
 PSEUDOGRAM_API_KEY = os.getenv("PSEUDOGRAM_API_KEY", "")
 DATABASE_URL = os.getenv("DATABASE_URL", "linkplease.sqlite3")
 VERIFY_WEBHOOK_SIGNATURES = os.getenv("VERIFY_WEBHOOK_SIGNATURES", "true").lower() == "true"
+REQUIRE_WEBHOOK_SIGNATURES = os.getenv("REQUIRE_WEBHOOK_SIGNATURES", "false").lower() == "true"
+COMMENT_DELETE_POLICY = os.getenv("COMMENT_DELETE_POLICY", "ignore").lower()
 MAX_SEND_ATTEMPTS = int(os.getenv("MAX_SEND_ATTEMPTS", "8"))
 RATE_LIMIT_SECONDS = float(os.getenv("RATE_LIMIT_SECONDS", "6.2"))
 SENDING_TIMEOUT_SECONDS = float(os.getenv("SENDING_TIMEOUT_SECONDS", "30"))
@@ -188,7 +190,11 @@ def verify_signature(raw_body: bytes, signature: str | None) -> None:
         return
     if not PSEUDOGRAM_API_KEY:
         raise HTTPException(status_code=500, detail="webhook signing secret not configured")
-    if not signature or not signature.startswith("sha256="):
+    if not signature:
+        if REQUIRE_WEBHOOK_SIGNATURES:
+            raise HTTPException(status_code=401, detail="missing webhook signature")
+        return
+    if not signature.startswith("sha256="):
         raise HTTPException(status_code=401, detail="invalid webhook signature")
     expected = hmac.new(PSEUDOGRAM_API_KEY.encode(), raw_body, hashlib.sha256).hexdigest()
     supplied = signature.removeprefix("sha256=")
@@ -423,6 +429,8 @@ def handle_comment_deleted(comment_id: str | None) -> None:
             """,
             (comment_id, utc_now_iso()),
         )
+        if COMMENT_DELETE_POLICY != "cancel":
+            return
         conn.execute(
             """
             UPDATE deliveries
@@ -442,7 +450,7 @@ def handle_comment_created(data: dict[str, Any]) -> None:
         return
 
     with db() as conn:
-        if conn.execute(
+        if COMMENT_DELETE_POLICY == "cancel" and conn.execute(
             "SELECT 1 FROM deleted_comments WHERE comment_id = ?", (comment_id,)
         ).fetchone():
             return
@@ -497,7 +505,7 @@ async def send_due_deliveries(limit: int = 1) -> int:
 
 
 async def send_delivery(delivery: sqlite3.Row) -> None:
-    if comment_was_deleted(delivery["comment_id"]):
+    if COMMENT_DELETE_POLICY == "cancel" and comment_was_deleted(delivery["comment_id"]):
         with db() as conn:
             conn.execute(
                 """
