@@ -40,12 +40,6 @@ Set `PSEUDOGRAM_API_KEY` in the deployment environment. The app stores durable q
 
 There is also a `render.yaml` blueprint that configures the app with a persistent disk at `/var/data`.
 
-## Test and Submit
-
-Use `scripts/pseudogram.py` to run PseudoGram simulation, fetch truth, and submit once you have a deployed URL and Loom link. See `SUBMISSION_CHECKLIST.md` for the exact commands.
-
-See `DEPLOYMENT.md` for the GitHub-to-Render deployment steps.
-
 ## Notes
 
 - Keyword matching is case-insensitive and matches anywhere in the comment text.
