@@ -1,0 +1,31 @@
+services:
+  - type: web
+    name: linkplease-assignment
+    runtime: python
+    plan: free
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn app:app --host 0.0.0.0 --port $PORT
+    envVars:
+      - key: PSEUDOGRAM_API_KEY
+        sync: false
+      - key: PSEUDOGRAM_BASE_URL
+        value: https://pseudogram-api.onrender.com
+      - key: DATABASE_URL
+        value: /var/data/linkplease.sqlite3
+      - key: VERIFY_WEBHOOK_SIGNATURES
+        value: true
+      - key: MAX_SEND_ATTEMPTS
+        value: 8
+      - key: RATE_LIMIT_SECONDS
+        value: 6.2
+      - key: SENDING_TIMEOUT_SECONDS
+        value: 30
+      - key: MAX_STATUS_CHECKS
+        value: 180
+      - key: JOB_CLAIM_TIMEOUT_SECONDS
+        value: 30
+    disks:
+      - name: linkplease-data
+        mountPath: /var/data
+        sizeGB: 1
+
