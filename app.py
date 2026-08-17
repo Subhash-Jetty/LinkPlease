@@ -102,7 +102,7 @@ def init_db() -> None:
             """
             CREATE TABLE IF NOT EXISTS rules (
                 rule_id TEXT PRIMARY KEY,
-                keyword TEXT NOT NULL,
+                keyword TEXT NOT NULL UNIQUE,
                 dm_message TEXT NOT NULL,
                 created_at TEXT NOT NULL
             );
@@ -204,12 +204,36 @@ def verify_signature(raw_body: bytes, signature: str | None) -> None:
 
 @app.post("/rules", response_model=RuleOut, status_code=201)
 def create_rule(rule: RuleIn) -> RuleOut:
-    rule_id = f"rule_{uuid.uuid4().hex[:12]}"
     with db() as conn:
-        conn.execute(
-            "INSERT INTO rules(rule_id, keyword, dm_message, created_at) VALUES(?, ?, ?, ?)",
-            (rule_id, rule.keyword, rule.dm_message, utc_now_iso()),
-        )
+        existing = conn.execute(
+            "SELECT * FROM rules WHERE lower(keyword) = lower(?)",
+            (rule.keyword,),
+        ).fetchone()
+        if existing:
+            return RuleOut(
+                rule_id=existing["rule_id"],
+                keyword=existing["keyword"],
+                dm_message=existing["dm_message"],
+            )
+
+        rule_id = f"rule_{uuid.uuid4().hex[:12]}"
+        try:
+            conn.execute(
+                "INSERT INTO rules(rule_id, keyword, dm_message, created_at) VALUES(?, ?, ?, ?)",
+                (rule_id, rule.keyword, rule.dm_message, utc_now_iso()),
+            )
+        except sqlite3.IntegrityError:
+            existing = conn.execute(
+                "SELECT * FROM rules WHERE lower(keyword) = lower(?)",
+                (rule.keyword,),
+            ).fetchone()
+            if existing:
+                return RuleOut(
+                    rule_id=existing["rule_id"],
+                    keyword=existing["keyword"],
+                    dm_message=existing["dm_message"],
+                )
+            raise
     return RuleOut(rule_id=rule_id, keyword=rule.keyword, dm_message=rule.dm_message)
 
 

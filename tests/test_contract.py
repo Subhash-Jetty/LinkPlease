@@ -112,6 +112,18 @@ def test_create_rule_trims_whitespace(tmp_path, monkeypatch):
     assert response.json()["dm_message"] == "Here you go"
 
 
+def test_create_rule_is_idempotent_by_keyword(tmp_path, monkeypatch):
+    app_module = load_app(tmp_path, monkeypatch)
+    client = TestClient(app_module.app)
+
+    first = client.post("/rules", json={"keyword": "PRICE", "dm_message": "Here you go"})
+    second = client.post("/rules", json={"keyword": "price", "dm_message": "Different"})
+
+    assert first.status_code == 201
+    assert second.status_code == 201
+    assert second.json() == first.json()
+
+
 def test_webhook_matches_rule_and_blocks_duplicate_user_rule(tmp_path, monkeypatch):
     app_module = load_app(tmp_path, monkeypatch)
     client = TestClient(app_module.app)
