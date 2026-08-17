@@ -49,3 +49,5 @@ There is also a `render.yaml` blueprint that configures the app with a persisten
 - `COMMENT_DELETE_POLICY=ignore` keeps delivery accounting aligned with PseudoGram's expected unique recipients. Set it to `cancel` to suppress sends for deleted comments.
 - `GET /stats` is computed from durable delivery rows plus a durable duplicate counter.
 - The send-rate limiter is backed by SQLite, so it survives process restarts when the database file is persistent.
+
+Loom : https://drive.google.com/file/d/1Bfl6zpAdEF-vTwuhC5cNYFEAXLCO937I/view?usp=sharing
